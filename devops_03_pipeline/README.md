@@ -328,3 +328,11 @@ minikube  service   devops-002-hello
 ```
 kubectl port-forward service/devops-002-hello 9090:9090
 ```
+
+
+# Jenkins
+https://www.jenkins.io/doc/book/installing/war-file/
+```
+java -jar jenkins.war --httpPort=9999
+```
+
