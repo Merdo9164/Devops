@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: devops-application-deployment
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: devops-application
+  template:
+    metadata:
+      labels:
+        app: devops-application
+    spec:
+      containers:
+        - name: devops-application
+          image: merdo9164/devops-application:latest
+          resources:
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+          ports:
+            - containerPort: 8080
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: devops-application-service
+spec:
+  selector:
+    app: devops-application
+  ports:
+    - port: 9090 # Service in dinleyeceği port
+      targetPort: 8080 # Pod içindeki .jar uygulamanın portu- containerPort ile aynı olmalı
+  type: NodePort  #Service tipi(ClusterIp,NodePort,LoadBalancer,vb.)
