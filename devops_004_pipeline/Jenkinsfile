@@ -3,7 +3,7 @@ pipeline {
 
     tools {
         maven "Maven3"
-        jdk "Java25"
+        jdk "Java21"
     }
 
     stages {
@@ -35,7 +35,7 @@ pipeline {
         stage('Build Maven') {
             steps {
                 echo 'Maven Başlıyor.'
-                dir('devops_03_pipeline') {
+                dir('devops_004_pipeline') {
                     script {
                         if (isUnix()) {
                             sh "mvn clean install"
@@ -50,10 +50,10 @@ pipeline {
             }
         }
 
-
+/*
         stage('Docker Image') {
             steps {
-              dir('devops_03_pipeline') {
+              dir('devops_004_pipeline') {
                 script {
                         if (isUnix()) {
                             sh "docker build   -t  merdo9164/devops-application:latest ."
@@ -84,7 +84,7 @@ pipeline {
 
         stage('Kubernetes(K8s)') {
             steps {
-                dir('devops_03_pipeline') {
+                dir('devops_004_pipeline') {
                     script {
                         kubernetesDeploy (configs: 'deployment-service.yaml', kubeconfigId: 'kubernetes')
                         echo 'K8s içinde image i çalıştır.'
@@ -106,6 +106,7 @@ pipeline {
                 echo 'Makinemdeki fazlalık imageleri temizle.'
             }
         }
+*/
 
     }
 }
