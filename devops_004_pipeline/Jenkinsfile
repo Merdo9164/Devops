@@ -1,0 +1,111 @@
+pipeline {
+    agent any
+
+    tools {
+        maven "Maven3"
+        jdk "Java25"
+    }
+
+    stages {
+
+        stage('GitHub') {
+            steps {
+
+                checkout scmGit(branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[url: 'https://github.com/Merdo9164/Devops.git']])
+                echo 'Uygulamayı Github dan çek'
+
+            }
+        }
+
+        stage('Test') {
+            steps {
+                dir('devops_03_pipeline') {
+                    script {
+                        if (isUnix()) {
+                            sh "mvn test"
+                        } else {
+                            bat "mvn test"
+                        }
+                    }
+                }
+            }
+        }
+
+
+        stage('Build Maven') {
+            steps {
+                echo 'Maven Başlıyor.'
+                dir('devops_03_pipeline') {
+                    script {
+                        if (isUnix()) {
+                            sh "mvn clean install"
+                            echo 'MacOS ya da Linux'
+                        } else {
+                            bat "mvn clean install"
+                            echo 'Windows'
+                        }
+                    }
+                }
+                echo 'Maven bitti.'
+            }
+        }
+
+
+        stage('Docker Image') {
+            steps {
+              dir('devops_03_pipeline') {
+                script {
+                        if (isUnix()) {
+                            sh "docker build   -t  merdo9164/devops-application:latest ."
+                        } else {
+                            bat "docker build   -t  merdo9164/devops-application:latest ."
+                        }
+                    }
+                }
+            }
+        }
+        stage('Docker Image to DockerHub') {
+            steps {
+                echo 'Image DockerHuba gönder.'
+                   script {
+                      withCredentials([string(credentialsId: 'dockerhub', variable: 'dockerhub')]) {
+                        // login
+
+                            if (isUnix()) {
+                                 sh "docker push merdo9164/devops-application:latest"
+                            } else {
+                                bat "docker push merdo9164/devops-application:latest"
+                            }
+                        }
+
+                    }
+            }
+        }
+
+        stage('Kubernetes(K8s)') {
+            steps {
+                dir('devops_03_pipeline') {
+                    script {
+                        kubernetesDeploy (configs: 'deployment-service.yaml', kubeconfigId: 'kubernetes')
+                        echo 'K8s içinde image i çalıştır.'
+                    }
+                }
+            }
+        }
+
+        stage('Clean') {
+            steps {
+                 script{
+                     if (isUnix()) {
+                                 sh "docker image prune -f"
+                            } else {
+                                bat "docker image prune -f"
+                            }
+                    }
+
+                echo 'Makinemdeki fazlalık imageleri temizle.'
+            }
+        }
+
+    }
+}

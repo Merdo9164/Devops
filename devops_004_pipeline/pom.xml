@@ -10,7 +10,7 @@
     </parent>
     <groupId>com.erdo</groupId>
     <artifactId>devops_004_pipeline</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.1</version>
     <name>devops_004_pipeline</name>
     <description>devops_004_pipeline</description>
     <url/>
@@ -32,12 +32,12 @@
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webmvc</artifactId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>
@@ -49,6 +49,8 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
         </plugins>
+
+        <finalName>devops-application</finalName>
     </build>
 
 </project>
