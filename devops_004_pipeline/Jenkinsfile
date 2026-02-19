@@ -56,6 +56,22 @@ pipeline {
             }
         }
 
+        stage('SonarQube') {
+                            steps {
+                                dir('devops_004_pipeline') {
+                                    script {
+                                        withSonarQubeEnv(credentialsId: 'TOKEN_ID_SONARQUBE') {
+                                            if (isUnix()) {
+                                                sh "mvn sonar:sonar"
+                                            } else {
+                                                bat "mvn sonar:sonar"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
 /*
         stage('Docker Image') {
             steps {
