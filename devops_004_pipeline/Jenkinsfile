@@ -6,6 +6,18 @@ pipeline {
         jdk "Java21"
     }
 
+
+    environment{
+        APP_NAME = "devops-application"
+        RELEASE = "1.0.${env.BUILD_NUMBER}"
+        DOCKER_USER = "merdo9164"
+        DOCKER_PASS = 'TOKEN_ID_DOCKER'
+        IMAGE_NAME = "${DOCKER_USER}/${APP_NAME}"
+        IMAGE_TAG = "${RELEASE}"
+
+
+    }
+
     stages {
 
         stage ('Clean Workspace'){
@@ -25,7 +37,7 @@ pipeline {
 
         stage('Test') {
             steps {
-                dir('devops_03_pipeline') {
+                dir('devops_004_pipeline') {
                     script {
                         if (isUnix()) {
                             sh "mvn test"
@@ -72,20 +84,59 @@ pipeline {
                             }
                         }
 
-/*
-        stage('Docker Image') {
+
+        stage('Docker Build Image & DockerHub Push'){
             steps {
-              dir('devops_004_pipeline') {
-                script {
-                        if (isUnix()) {
-                            sh "docker build   -t  merdo9164/devops-application:latest ."
-                        } else {
-                            bat "docker build   -t  merdo9164/devops-application:latest ."
-                        }
+                dir('devops_004_pipeline') {
+
+                    script {
+                       docker.withRegistry('' , DOCKER_PASS){
+                           dockerImage = docker.build "${IMAGE_NAME}"
+                           dockerImage.push("${IMAGE_TAG}")
+                           dockerImage.push("latest")
+                       }
                     }
                 }
             }
         }
+
+        stage("Trivy Scan") {
+                    steps {
+                        script {
+                          docker.withRegistry('', DOCKER_PASS) {
+                                if (isUnix()) {
+                                    sh ('docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image merdo9164/devops-application:latest --no-progress --scanners vuln  --exit-code 0 --severity HIGH,CRITICAL --format table')
+                                } else {
+                                    bat ('docker run -v /var/run/docker.sock:/var/run/docker.sock aquasec/trivy image merdo9164/devops-application:latest --no-progress --scanners vuln  --exit-code 0 --severity HIGH,CRITICAL --format table')
+                                }
+                            }
+                        }
+                    }
+        }
+
+
+        stage('Cleanup Old Docker Images') {
+                    steps {
+                        script {
+                            if (isUnix()) {
+                                // Bu repo için tüm image’leri al, tarihe göre sırala, son 3 hariç sil
+                                sh """
+                                    docker images "${env.IMAGE_NAME}" --format "{{.Repository}}:{{.Tag}} {{.CreatedAt}}" \\
+                                    | sort -r -k2 \\
+                                    | tail -n +4 \\
+                                    | awk '{print \$1}' \\
+                                    | xargs -r docker rmi -f
+                                """
+
+                            } else {
+                                bat """
+                                     for /f "skip=3 tokens=1" %%i in ('docker images ${env.IMAGE_NAME} --format "{{.Repository}}:{{.Tag}}" ^| sort') do docker rmi -f %%i
+                                """
+                            }
+                        }
+                    }
+        }
+/*
         stage('Docker Image to DockerHub') {
             steps {
                 echo 'Image DockerHuba gönder.'
